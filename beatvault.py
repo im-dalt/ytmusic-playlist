@@ -138,6 +138,60 @@ def print_summary(downloaded, skipped, failed):
     print("=" * 40)
 
 
+def list_songs(history):
+    if not history:
+        print("No songs have been downloaded yet.")
+        return
+
+    playlists = {}
+    for vid, meta in history.items():
+        playlist = meta.get('playlist_name', 'Unknown')
+        playlists.setdefault(playlist, []).append((vid, meta))
+
+    total = len(history)
+    print(f"\nTotal songs: {total}")
+    for playlist, songs in sorted(playlists.items()):
+        print(f"\n  [{playlist}] ({len(songs)} songs)")
+        for vid, meta in sorted(songs, key=lambda x: x[1].get('title', '')):
+            title = meta.get('title', 'Unknown')
+            artist = meta.get('artist', 'Unknown')
+            date = meta.get('download_date', '')[:10]
+            print(f"    {artist} - {title} (downloaded: {date})")
+
+
+def search_songs(history, query):
+    if not history:
+        print("No songs have been downloaded yet.")
+        return
+
+    query_lower = query.lower()
+    results = []
+    for vid, meta in history.items():
+        title = meta.get('title', '').lower()
+        artist = meta.get('artist', '').lower()
+        if query_lower in title or query_lower in artist:
+            results.append((vid, meta))
+
+    if not results:
+        print(f"No results found for '{query}'.")
+        return
+
+    print(f"\nFound {len(results)} result(s) for '{query}':")
+    for vid, meta in sorted(results, key=lambda x: x[1].get('title', '')):
+        title = meta.get('title', 'Unknown')
+        artist = meta.get('artist', 'Unknown')
+        date = meta.get('download_date', '')[:10]
+        print(f"  {artist} - {title} (downloaded: {date})")
+
+
+def reset_history():
+    if HISTORY_FILE.exists():
+        HISTORY_FILE.unlink()
+        print("[OK] Download history cleared.")
+    else:
+        print("[INFO] No history file found.")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="BeatVault — Download music from YouTube playlists as audio files."
@@ -147,7 +201,28 @@ def main():
                         help=f'Audio quality (default: {DEFAULT_QUALITY})')
     parser.add_argument('--output', default=DEFAULT_OUTPUT,
                         help=f'Output directory (default: {DEFAULT_OUTPUT})')
+    parser.add_argument('--list', action='store_true', help='Display all downloaded songs')
+    parser.add_argument('--reset', action='store_true', help='Clear download history')
+    parser.add_argument('--search', metavar='QUERY', help='Search downloaded songs by title or artist')
     args = parser.parse_args()
+
+    history = load_history()
+
+    if args.list:
+        list_songs(history)
+        return
+
+    if args.search:
+        search_songs(history, args.search)
+        return
+
+    if args.reset:
+        confirm = input("Are you sure you want to clear download history? (y/N): ")
+        if confirm.lower() == 'y':
+            reset_history()
+        else:
+            print("[INFO] Reset cancelled.")
+        return
 
     urls = args.urls
     if not urls:
@@ -160,7 +235,6 @@ def main():
         return 1
 
     Path(args.output).mkdir(parents=True, exist_ok=True)
-    history = load_history()
     total_downloaded = 0
     total_skipped = 0
     total_failed = 0
