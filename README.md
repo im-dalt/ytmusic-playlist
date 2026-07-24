@@ -15,28 +15,28 @@ pip install -r requirements.txt
 
 ```bash
 # Download a playlist (you'll be prompted for URL)
-python beatvault.py
+python ytmusic-playlist.py
 
 # Download one or more playlist URLs directly
-python beatvault.py "https://youtube.com/playlist?list=..."
+python ytmusic-playlist.py "https://youtube.com/playlist?list=..."
 
 # Download multiple playlists
-python beatvault.py "https://youtube.com/playlist?list=..." "https://youtube.com/playlist?list=..."
+python ytmusic-playlist.py "https://youtube.com/playlist?list=..." "https://youtube.com/playlist?list=..."
 
 # Set audio quality
-python beatvault.py --quality high "https://youtube.com/playlist?list=..."
+python ytmusic-playlist.py --quality high "https://youtube.com/playlist?list=..."
 
 # Custom output directory
-python beatvault.py --output ./my_music/ "https://youtube.com/playlist?list=..."
+python ytmusic-playlist.py --output ./my_music/ "https://youtube.com/playlist?list=..."
 
 # List all downloaded songs
-python beatvault.py --list
+python ytmusic-playlist.py --list
 
 # Search downloaded songs
-python beatvault.py --search "song name"
+python ytmusic-playlist.py --search "song name"
 
 # Reset download history
-python beatvault.py --reset
+python ytmusic-playlist.py --reset
 ```
 
 ## Audio Quality
