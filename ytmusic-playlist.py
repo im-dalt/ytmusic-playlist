@@ -53,12 +53,12 @@ def build_ydl_opts(output_dir, playlist_name, quality):
         ],
         'writethumbnail': True,
         'ignoreerrors': True,
-        'js_runtimes': ['deno', 'node'],
+        'js_runtimes': {'deno': {}, 'node': {}},
     }
 
 
 def process_playlist(url, output_dir, quality, history):
-    with YoutubeDL({'quiet': True, 'ignoreerrors': True, 'js_runtimes': ['deno', 'node']}) as ydl:
+    with YoutubeDL({'quiet': True, 'ignoreerrors': True, 'js_runtimes': {'deno': {}, 'node': {}}}) as ydl:
         info = ydl.extract_info(url, download=False)
 
     if not info:
