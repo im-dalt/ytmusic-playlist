@@ -120,6 +120,11 @@ def process_playlist(url, output_dir, quality, history):
                 failed += 1
                 continue
 
+            if not video_info:
+                print(f"[FAILED] {title} — could not extract info")
+                failed += 1
+                continue
+
             uploader = video_info.get('uploader', 'Unknown')
             history[vid] = {
                 'title': video_info.get('title', title),
