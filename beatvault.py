@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """BeatVault — Download music from YouTube playlists as audio files."""
 
+import argparse
 import json
 import os
 import re
@@ -120,7 +121,17 @@ def process_playlist(url, output_dir, quality, history):
 
 
 def main():
-    urls = sys.argv[1:] if len(sys.argv) > 1 else []
+    parser = argparse.ArgumentParser(
+        description="BeatVault — Download music from YouTube playlists as audio files."
+    )
+    parser.add_argument('urls', nargs='*', help='YouTube playlist URL(s) to download')
+    parser.add_argument('--quality', choices=['low', 'medium', 'high'], default=DEFAULT_QUALITY,
+                        help=f'Audio quality (default: {DEFAULT_QUALITY})')
+    parser.add_argument('--output', default=DEFAULT_OUTPUT,
+                        help=f'Output directory (default: {DEFAULT_OUTPUT})')
+    args = parser.parse_args()
+
+    urls = args.urls
     if not urls:
         url = input("Enter YouTube playlist URL: ").strip()
         if url:
@@ -130,14 +141,14 @@ def main():
         print("No URL provided.")
         return 1
 
-    Path(DEFAULT_OUTPUT).mkdir(parents=True, exist_ok=True)
+    Path(args.output).mkdir(parents=True, exist_ok=True)
     history = load_history()
     total_downloaded = 0
     total_skipped = 0
     total_failed = 0
 
     for url in urls:
-        d, s, f = process_playlist(url, DEFAULT_OUTPUT, DEFAULT_QUALITY, history)
+        d, s, f = process_playlist(url, args.output, args.quality, history)
         total_downloaded += d
         total_skipped += s
         total_failed += f
