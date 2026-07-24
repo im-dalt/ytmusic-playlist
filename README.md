@@ -1,5 +1,3 @@
-# BeatVault
-
 Download music from YouTube playlists as audio files (MP3).
 
 ## Prerequisites
