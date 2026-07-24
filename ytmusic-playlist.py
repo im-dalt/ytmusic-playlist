@@ -58,7 +58,13 @@ def build_ydl_opts(output_dir, playlist_name, quality):
 
 
 def process_playlist(url, output_dir, quality, history):
-    with YoutubeDL({'quiet': True, 'ignoreerrors': True, 'js_runtimes': {'deno': {}, 'node': {}}}) as ydl:
+    extract_opts = {
+        'quiet': True,
+        'ignoreerrors': True,
+        'extract_flat': 'in_playlist',
+        'js_runtimes': {'deno': {}, 'node': {}},
+    }
+    with YoutubeDL(extract_opts) as ydl:
         info = ydl.extract_info(url, download=False)
 
     if not info:
@@ -66,7 +72,7 @@ def process_playlist(url, output_dir, quality, history):
         return 0, 0, 1
 
     playlist_title = info.get('title', 'Unknown Playlist')
-    entries = info.get('entries', [])
+    entries = list(info.get('entries', []) or [])
     if not entries:
         print(f"[INFO] No entries found in playlist: {playlist_title}")
         return 0, 0, 0
@@ -96,17 +102,16 @@ def process_playlist(url, output_dir, quality, history):
     failed = 0
     with YoutubeDL(opts) as ydl:
         for entry in to_download:
-            video_url = entry.get('webpage_url')
+            video_url = entry.get('url') or entry.get('webpage_url')
             vid = entry.get('id')
             title = entry.get('title', 'Unknown')
-            uploader = entry.get('uploader', 'Unknown')
 
             if not video_url or not vid:
                 failed += 1
                 continue
 
             try:
-                ydl.download([video_url])
+                video_info = ydl.extract_info(video_url, download=True)
             except KeyboardInterrupt:
                 save_history(history)
                 raise
@@ -115,15 +120,16 @@ def process_playlist(url, output_dir, quality, history):
                 failed += 1
                 continue
 
+            uploader = video_info.get('uploader', 'Unknown')
             history[vid] = {
-                'title': title,
+                'title': video_info.get('title', title),
                 'artist': uploader,
-                'url': video_url,
+                'url': video_info.get('webpage_url', video_url),
                 'download_date': datetime.now().isoformat(),
                 'playlist_name': playlist_title,
             }
             save_history(history)
-            print(f"[DOWNLOADED] {title}")
+            print(f"[DOWNLOADED] {video_info.get('title', title)}")
             downloaded += 1
 
     return downloaded, skipped, failed
