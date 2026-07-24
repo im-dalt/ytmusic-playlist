@@ -3,7 +3,6 @@
 
 import argparse
 import json
-import os
 import re
 import sys
 from datetime import datetime
@@ -105,7 +104,16 @@ def process_playlist(url, output_dir, quality, history):
                 failed += 1
                 continue
 
-            ydl.download([video_url])
+            try:
+                ydl.download([video_url])
+            except KeyboardInterrupt:
+                save_history(history)
+                raise
+            except Exception as e:
+                print(f"[FAILED] {title} — {e}")
+                failed += 1
+                continue
+
             history[vid] = {
                 'title': title,
                 'artist': uploader,
@@ -118,6 +126,16 @@ def process_playlist(url, output_dir, quality, history):
             downloaded += 1
 
     return downloaded, skipped, failed
+
+
+def print_summary(downloaded, skipped, failed):
+    print("\n" + "=" * 40)
+    print("DOWNLOAD SUMMARY")
+    print("=" * 40)
+    print(f"  Downloaded: {downloaded}")
+    print(f"  Skipped:    {skipped}")
+    print(f"  Failed:     {failed}")
+    print("=" * 40)
 
 
 def main():
@@ -147,13 +165,18 @@ def main():
     total_skipped = 0
     total_failed = 0
 
-    for url in urls:
-        d, s, f = process_playlist(url, args.output, args.quality, history)
-        total_downloaded += d
-        total_skipped += s
-        total_failed += f
+    try:
+        for url in urls:
+            d, s, f = process_playlist(url, args.output, args.quality, history)
+            total_downloaded += d
+            total_skipped += s
+            total_failed += f
+    except KeyboardInterrupt:
+        print("\n[INFO] Interrupted by user. Progress has been saved.")
+        print_summary(total_downloaded, total_skipped, total_failed)
+        return 130
 
-    print(f"\nDownloaded: {total_downloaded} | Skipped: {total_skipped} | Failed: {total_failed}")
+    print_summary(total_downloaded, total_skipped, total_failed)
     return 0
 
 
